@@ -57,10 +57,10 @@ function successPage(dlUrl) {
     + '<span class="kicker">★ NAKSH\'S RETRO TOOL DUKAAN ★</span><br>'
     + '<span class="paid">★ PAID ★</span>'
     + '<h1>Payment Successful</h1>'
-    + '<p>Shukriya! Payment confirm ho gayi.<br>Tumhara download apne aap shuru ho gaya hai.</p>'
+    + '<p>Thank you! Your payment is confirmed.<br>Your download has started automatically.</p>'
     + '<iframe src="' + esc(dlUrl) + '" style="display:none" title="download"></iframe>'
-    + '<p><a href="' + esc(dlUrl) + '">Download shuru na ho to yahan dabao</a></p>'
-    + '<p class="note">Ye download link sirf tumhare liye bana hai aur kuch minute me expire ho jayega. Kahin forward mat karna.</p>'
+    + '<p><a href="' + esc(dlUrl) + '">If the download doesn\'t start, click here</a></p>'
+    + '<p class="note">This download link was made only for you and expires in a few minutes. Please do not share it.</p>'
     + '</div></body></html>';
 }
 
@@ -76,11 +76,11 @@ module.exports = async (req, res) => {
     const q = req.query || {};
     const txnid = body.txnid || q.txnid;
     if (!txnid) {
-      res.status(400).send(page('Error', 'Transaction ID nahi mila. Ye page sirf PayU payment ke baad khulta hai.'));
+      res.status(400).send(page('Error', 'No transaction ID found. This page only opens right after a PayU payment. If you just paid and see this, please contact support with your payment receipt.'));
       return;
     }
     if (!PAYU_KEY || !PAYU_SALT) {
-      res.status(500).send(page('Setup adhura hai', 'Server me PayU keys set nahi hain. Naksh se sampark karo.'));
+      res.status(500).send(page('Setup incomplete', 'PayU keys are not configured on the server. Please contact support.'));
       return;
     }
 
@@ -91,19 +91,19 @@ module.exports = async (req, res) => {
     const vr = await fetch('https://info.payu.in/merchant/postservice?form=2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-      body: params.toString(),
-    });
+      body: params.toString(),};
+    });};
     const data = await vr.json();
     const txn = data && data.transaction_details && data.transaction_details[txnid];
 
     if (!txn || txn.status !== 'success') {
-      res.status(402).send(page('Payment verify nahi hui', 'Hum tumhari payment confirm nahi kar paye. Agar paise kate hain to 5-10 minute ruko, phir Naksh se sampark karo.'));
+      res.status(402).send(page('Payment could not be verified', 'We could not confirm your payment. If money was deducted, please wait 5-10 minutes, then contact support.'));
       return;
     }
 
     const product = productFrom(txn.productinfo || body.productinfo || '');
     if (!product) {
-      res.status(404).send(page('Product nahi mila', 'Is payment se juda product pehchana nahi gaya. Naksh se sampark karo.'));
+      res.status(404).send(page('Product not found', 'We could not identify the product linked to this payment. Please contact support.'));
       return;
     }
 
@@ -113,6 +113,6 @@ module.exports = async (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(successPage(dlUrl));
   } catch (e) {
-    res.status(500).send(page('Kuch gadbad hui', 'Server me error aaya. Thodi der baad retry karo ya Naksh se sampark karo.'));
+    res.status(500).send(page('Something went wrong', 'A server error occurred. Please try again in a bit or contact support.'));
   }
 };
