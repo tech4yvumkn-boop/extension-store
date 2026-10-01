@@ -1,1 +1,2 @@
-{"functions":{"api/file.js":{"includeFiles":["adjustment-layer.zip","product-zips/**"]}},"redirects":[{"destination":"/","permanent":false,"source":"/adjustment-layer.zip"}]}
+{"functions":{"api/file.js":{"includeFiles":"**/*.zip"}},"redirects":[{"destination":"/","permanent":false,"source":"/adjustment-layer.zip"}]}
+
