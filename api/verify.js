@@ -91,8 +91,8 @@ module.exports = async (req, res) => {
     const vr = await fetch('https://info.payu.in/merchant/postservice?form=2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-      body: params.toString(),};
-    });};
+      body: params.toString(),
+    });
     const data = await vr.json();
     const txn = data && data.transaction_details && data.transaction_details[txnid];
 
