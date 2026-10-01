@@ -1,7 +1,8 @@
 // POST from PayU (surl) -> verify payment with PayU API -> success page that
-// auto-starts the download. The thank-you page unlocks with ?token= and shows
-// only the bought product.
+// auto-starts the download. Supports built-in and admin-added products.
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 const PAYU_KEY = process.env.PAYU_KEY;
 const PAYU_SALT = process.env.PAYU_SALT;
@@ -11,6 +12,17 @@ function productFrom(info) {
   const s = (info || '').toLowerCase();
   if (s.includes('adjustment')) return 'adjust';
   if (s.includes('download bin')) return 'bin';
+  // Admin-added products: productinfo is the product name (exact match).
+  try {
+    const p = path.join(process.cwd(), 'products.json');
+    if (fs.existsSync(p)) {
+      const list = JSON.parse(fs.readFileSync(p, 'utf8'));
+      const hit = list.filter(function (x) {
+        return x && x.active && String(x.name).toLowerCase() === s;
+      })[0];
+      if (hit) return hit.id;
+    }
+  } catch (e) { /* ignore */ }
   return null;
 }
 
