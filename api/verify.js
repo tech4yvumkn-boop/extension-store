@@ -1,5 +1,6 @@
-// POST from PayU (surl) -> verify payment with PayU API -> 302 to thank-you page with token.
-// The thank-you page unlocks with ?token= and shows only the bought product.
+// POST from PayU (surl) -> verify payment with PayU API -> success page that
+// auto-starts the download. The thank-you page unlocks with ?token= and shows
+// only the bought product.
 const crypto = require('crypto');
 
 const PAYU_KEY = process.env.PAYU_KEY;
@@ -25,11 +26,42 @@ function signToken(txnid, product, exp) {
   return b64urlEncode(payload + '|' + hmac);
 }
 
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function page(title, msg) {
   return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    + '<title>' + title + '</title>'
-    + '<style>body{background:#1a1210;color:#f5e6c8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;text-align:center}h1{color:#ffd23f;font-size:26px}</style>'
-    + '</head><body><div><h1>' + title + '</h1><p>' + msg + '</p></div></body></html>';
+    + '<title>' + esc(title) + '</title>'
+    + '<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#1a1210;color:#f5e6c8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center}'
+    + '.card{background:#241a14;border:3px solid #ffd23f;border-radius:14px;max-width:420px;width:100%;padding:28px;box-shadow:8px 8px 0 #e63946}'
+    + '.kicker{display:inline-block;background:#e63946;color:#fff;font-size:11px;letter-spacing:2px;padding:5px 10px;border-radius:4px;margin-bottom:12px}'
+    + 'h1{color:#ffd23f;font-size:24px;margin:0 0 10px}p{line-height:1.6}'
+    + 'a{color:#4fd1c5}.note{font-size:12px;color:#a89880;margin-top:16px}</style>'
+    + '</head><body><div class="card">'
+    + '<span class="kicker">★ NAKSH\'S RETRO TOOL DUKAAN ★</span>'
+    + '<h1>' + esc(title) + '</h1><p>' + msg + '</p></div></body></html>';
+}
+
+// Success page: confirms payment and auto-starts the download in a hidden frame.
+function successPage(dlUrl) {
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>Payment Successful</title>'
+    + '<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#1a1210;color:#f5e6c8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center}'
+    + '.card{background:#241a14;border:3px solid #ffd23f;border-radius:14px;max-width:420px;width:100%;padding:28px;box-shadow:8px 8px 0 #e63946}'
+    + '.kicker{display:inline-block;background:#e63946;color:#fff;font-size:11px;letter-spacing:2px;padding:5px 10px;border-radius:4px;margin-bottom:12px}'
+    + '.paid{display:inline-block;background:#ffd23f;color:#1a1210;font-weight:800;font-size:13px;letter-spacing:2px;padding:6px 14px;border-radius:4px;transform:rotate(-4deg);margin-bottom:10px}'
+    + 'h1{color:#ffd23f;font-size:26px;margin:0 0 10px}p{line-height:1.6}'
+    + 'a{color:#4fd1c5}.note{font-size:12px;color:#a89880;margin-top:16px}</style>'
+    + '</head><body><div class="card">'
+    + '<span class="kicker">★ NAKSH\'S RETRO TOOL DUKAAN ★</span><br>'
+    + '<span class="paid">★ PAID ★</span>'
+    + '<h1>Payment Successful</h1>'
+    + '<p>Shukriya! Payment confirm ho gayi.<br>Tumhara download apne aap shuru ho gaya hai.</p>'
+    + '<iframe src="' + esc(dlUrl) + '" style="display:none" title="download"></iframe>'
+    + '<p><a href="' + esc(dlUrl) + '">Download shuru na ho to yahan dabao</a></p>'
+    + '<p class="note">Ye download link sirf tumhare liye bana hai aur kuch minute me expire ho jayega. Kahin forward mat karna.</p>'
+    + '</div></body></html>';
 }
 
 module.exports = async (req, res) => {
@@ -75,11 +107,11 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const exp = Math.floor(Date.now() / 1000) + 30 * 60; // 30 min
+    const exp = Math.floor(Date.now() / 1000) + 10 * 60; // 10 min
     const token = signToken(txnid, product, exp);
-    const dest = '/?token=' + encodeURIComponent(token) + '&product=' + encodeURIComponent(product) + '#thank-you';
-    res.writeHead(302, { Location: dest });
-    res.end();
+    const dlUrl = '/api/file?token=' + encodeURIComponent(token) + '&product=' + encodeURIComponent(product);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(200).send(successPage(dlUrl));
   } catch (e) {
     res.status(500).send(page('Kuch gadbad hui', 'Server me error aaya. Thodi der baad retry karo ya Naksh se sampark karo.'));
   }
