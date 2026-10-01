@@ -2181,5 +2181,122 @@
       syncThankYou();
     })();
     </script>
-  </body>
+  <!-- FRESH DROPS: admin-added products, rendered from /api/products -->
+<script>
+(function () {
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function fillList(id, items) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    items.forEach(function (t) {
+      var li = document.createElement('li');
+      li.textContent = t;
+      el.appendChild(li);
+    });
+  }
+
+  var dynOpen = false;
+  function dynKey(e) { if (e && e.key === 'Escape' && dynOpen) closeDynamic(); }
+
+  function closeDynamic() {
+    var overlay = document.getElementById('detailOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('detail-lock');
+    document.removeEventListener('keydown', dynKey);
+    dynOpen = false;
+  }
+
+  function openDynamic(p) {
+    var overlay = document.getElementById('detailOverlay');
+    if (!overlay) return;
+    var tape = document.getElementById('detailTape');
+    if (p.gifUrl) {
+      tape.className = 'detail-tape has-demo';
+      tape.removeAttribute('aria-hidden');
+      tape.innerHTML = '<img class="demo-screen" src="' + esc(p.gifUrl) + '" alt="Demo of ' + esc(p.name) + '" width="480" height="340" />'
+        + '<span class="demo-scanlines" aria-hidden="true"></span>'
+        + '<span class="demo-sticker" aria-hidden="true">► LIVE DEMO</span>';
+    } else {
+      tape.className = 'detail-tape';
+      tape.setAttribute('aria-hidden', 'true');
+      tape.innerHTML = '<div class="tape-label"><p>NAKSH\'S DUKAAN • FRESH DROP</p>'
+        + '<p>REC TIME: INSTANT</p><p class="tape-title">' + esc(p.name) + '</p></div>';
+    }
+    document.getElementById('detailKicker').textContent = 'FRESH DROP • DIGITAL DOWNLOAD';
+    document.getElementById('detailTitle').textContent = p.name;
+    document.getElementById('detailIntro').textContent =
+      (p.tagline ? p.tagline + ' ' : '') + (p.description || '');
+    fillList('detailSteps', [
+      'Complete the secure PayU checkout — your download starts automatically.',
+      'Unzip the downloaded file on your computer.',
+      'Follow the included installation guide to set it up in Premiere Pro.',
+      'Use it in your edits and save hours of busywork.'
+    ]);
+    fillList('detailPerks', [
+      'One-time payment — yours forever.',
+      'Instant download right after payment.',
+      'Made for Premiere Pro editors.'
+    ]);
+    document.getElementById('detailPrice').innerHTML = '₹' + esc(p.price) + '<small>ONE-TIME PRICE</small>';
+    var note = document.getElementById('detailNote');
+    if (note) note.textContent = 'Secure PayU checkout • Instant download after payment';
+    var buy = document.getElementById('detailBuy');
+    buy.href = '/api/pay?product=' + encodeURIComponent(p.id);
+    buy.setAttribute('aria-label', 'Buy ' + p.name + ' now');
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('detail-lock');
+    dynOpen = true;
+    document.addEventListener('keydown', dynKey);
+  }
+
+  function card(p) {
+    var art = document.createElement('article');
+    art.className = 'product-card';
+    var demo = p.gifUrl
+      ? '<div class="product-thumb has-demo">'
+        + '<img class="demo-screen" src="' + esc(p.gifUrl) + '" alt="Demo of ' + esc(p.name) + '" width="480" height="340" loading="lazy" />'
+        + '<span class="demo-scanlines" aria-hidden="true"></span>'
+        + '<span class="demo-sticker" aria-hidden="true">► LIVE DEMO</span></div>'
+      : '<div class="product-thumb"></div>';
+    art.innerHTML =
+      '<span class="sticker sticker--coral sticker--tilt-right">★ FRESH DROP ★</span>'
+      + demo
+      + '<div class="product-info">'
+      + '<p class="product-type">DIGITAL DOWNLOAD</p>'
+      + '<h3>' + esc(p.name) + '</h3>'
+      + '<div class="product-compact">'
+      + '<span class="product-price">LOW-RATE<small>DEAL INSIDE</small></span>'
+      + '<button class="product-open" aria-haspopup="dialog" aria-label="Open the full overview of ' + esc(p.name) + '">Open overview</button>'
+      + '</div></div>';
+    art.querySelector('.product-open').addEventListener('click', function () { openDynamic(p); });
+    return art;
+  }
+
+  function init() {
+    // Hook our close flag into the existing close buttons.
+    document.querySelectorAll('[data-close]').forEach(function (b) {
+      b.addEventListener('click', function () { if (dynOpen) closeDynamic(); });
+    });
+    fetch('/api/products').then(function (r) {
+      if (!r.ok) throw new Error('bad');
+      return r.json();
+    }).then(function (list) {
+      if (!list || !list.length) return;
+      var grid = document.querySelector('.product-grid');
+      if (!grid) return;
+      list.forEach(function (p) { grid.appendChild(card(p)); });
+    }).catch(function () { /* stay silent — built-in products unaffected */ });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+</body>
 </html>
