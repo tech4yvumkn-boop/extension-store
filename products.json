@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "test-widget-x7k2",
+    "name": "TEST Widget (delete me)",
+    "price": "5.00",
+    "tagline": "Test product - will be deleted",
+    "description": "This is a test product for verifying the admin panel. It will be deleted.",
+    "zipPath": "product-zips/test-widget-x7k2.zip",
+    "gifUrl": null,
+    "active": true,
+    "createdAt": "2026-10-01T11:13:44.259Z",
+    "updatedAt": "2026-10-01T11:13:44.259Z"
+  }
+]
