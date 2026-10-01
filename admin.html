@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Naksh's Retro Tool Dukaan</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#1a1210;color:#f5e6c8;font-family:system-ui,-apple-system,sans-serif;padding:20px}
+.wrap{max-width:640px;margin:0 auto}
+.card{background:#241a14;border:3px solid #ffd23f;border-radius:14px;padding:24px;box-shadow:8px 8px 0 #e63946;margin-bottom:24px}
+.kicker{display:inline-block;background:#e63946;color:#fff;font-size:11px;letter-spacing:2px;padding:5px 10px;border-radius:4px;margin-bottom:12px}
+h1{color:#ffd23f;font-size:24px;margin:0 0 6px}
+h2{color:#4fd1c5;font-size:18px;margin:0 0 14px}
+p.sub{color:#a89880;font-size:14px;margin:0 0 18px}
+label{display:block;font-size:13px;margin:14px 0 5px;color:#ffd23f;font-weight:600}
+input[type=text],input[type=number],input[type=password],textarea{width:100%;padding:12px;border:2px solid #4fd1c5;border-radius:8px;background:#1a1210;color:#f5e6c8;font-size:15px;font-family:inherit}
+textarea{min-height:90px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:#ffd23f}
+input[type=file]{width:100%;padding:10px;border:2px dashed #4fd1c5;border-radius:8px;background:#1a1210;color:#f5e6c8;font-size:14px}
+.hint{font-size:12px;color:#a89880;margin-top:4px}
+button.btn{width:100%;margin-top:20px;padding:14px;background:#ffd23f;color:#1a1210;border:none;border-radius:8px;font-size:16px;font-weight:800;cursor:pointer}
+button.btn:disabled{opacity:.5;cursor:wait}
+button.btn:active{transform:scale(.98)}
+button.small{width:auto;margin:0 6px 0 0;padding:8px 14px;font-size:13px}
+button.danger{background:#e63946;color:#fff}
+button.ghost{background:transparent;color:#4fd1c5;border:2px solid #4fd1c5}
+.msg{padding:12px;border-radius:8px;font-size:14px;margin-top:14px;display:none}
+.msg.ok{display:block;background:#1d3a2a;color:#7ee2a8;border:1px solid #7ee2a8}
+.msg.err{display:block;background:#3a1d1d;color:#ff9a9a;border:1px solid #ff9a9a}
+.msg.info{display:block;background:#1d2a3a;color:#9ac8ff;border:1px solid #9ac8ff}
+.prow{display:flex;gap:12px;align-items:center;border:2px solid #3a2c22;border-radius:10px;padding:12px;margin-bottom:10px;background:#1a1210}
+.prow img{width:64px;height:48px;object-fit:cover;border-radius:6px;background:#000;flex-shrink:0}
+.prow .pi{flex:1;min-width:0}
+.prow .pi b{color:#ffd23f;font-size:15px}
+.prow .pi span{color:#a89880;font-size:13px;display:block}
+.badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:700;margin-left:6px}
+.badge.on{background:#1d3a2a;color:#7ee2a8}
+.badge.off{background:#3a1d1d;color:#ff9a9a}
+.prow .pa{display:flex;gap:6px;flex-shrink:0}
+#panel{display:none}
+.fileok{font-size:13px;color:#7ee2a8;margin-top:4px;display:none}
+.progress{font-size:14px;color:#9ac8ff;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="gate">
+    <span class="kicker">★ RESTRICTED ★</span>
+    <h1>Admin Panel</h1>
+    <p class="sub">Naksh's Retro Tool Dukaan — product manager. Enter the admin password.</p>
+    <label>Admin password</label>
+    <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn" id="loginBtn" onclick="login()">Unlock Panel</button>
+    <div class="msg" id="gateMsg"></div>
+  </div>
+  <div id="panel">
+    <div class="card">
+      <span class="kicker">★ NAKSH'S RETRO TOOL DUKAAN ★</span>
+      <h1 id="formTitle">Add New Product</h1>
+      <p class="sub">Fill this in, hit Publish — your product goes live on the store in 1–2 minutes.</p>
+      <label>Product name *</label>
+      <input type="text" id="fName" maxlength="80" placeholder="e.g. Cinematic LUT Pack">
+      <label>Price (₹) *</label>
+      <input type="number" id="fPrice" min="1" max="100000" step="1" placeholder="e.g. 49">
+      <label>Tagline (one punchy line)</label>
+      <input type="text" id="fTagline" maxlength="140" placeholder="e.g. One click. Film look.">
+      <label>Description *</label>
+      <textarea id="fDesc" maxlength="2000" placeholder="What does it do? Why will editors love it?"></textarea>
+      <label>Product ZIP file * (max 3MB)</label>
+      <input type="file" id="fZip" accept=".zip">
+      <div class="fileok" id="zipOk">✓ ZIP ready</div>
+      <label>Demo GIF (max 3MB, optional but recommended)</label>
+      <input type="file" id="fGif" accept=".gif,image/gif">
+      <div class="fileok" id="gifOk">✓ GIF ready</div>
+      <div class="hint" id="editHint" style="display:none">Editing — leave files empty to keep the current ones.</div>
+      <button class="btn" id="publishBtn" onclick="publish()">🚀 Publish Product</button>
+      <button class="btn ghost" id="cancelEdit" style="display:none" onclick="resetForm()">Cancel edit</button>
+      <div class="progress" id="progress"></div>
+      <div class="msg" id="formMsg"></div>
+    </div>
+    <div class="card">
+      <h2>Live Products</h2>
+      <p class="sub">These are on the store right now. Toggle them off anytime, or delete.</p>
+      <div id="plist"><p class="sub">Loading…</p></div>
+      <button class="btn ghost" onclick="loadList()">↻ Refresh list</button>
+    </div>
+  </div>
+</div>
+<script>
+var PW = sessionStorage.getItem('dukkaan_admin_pw') || '';
+var editingId = null;
+var editingZipPath = null;
+var editingGifUrl = null;
+function msg(id, text, cls){
+  var el = document.getElementById(id);
+  el.className = 'msg ' + cls;
+  el.textContent = text;
+}
+function api(action, method, data){
+  var opts = { method: method, headers: { 'x-admin-password': PW } };
+  if (data){ opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(data); }
+  return fetch('/api/admin?action=' + action, opts).then(function(r){
+    return r.json().then(function(j){
+      if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      return j;
+    });
+  });
+}
+function fileToB64(file){
+  return new Promise(function(resolve, reject){
+    var fr = new FileReader();
+    fr.onload = function(){ resolve(String(fr.result).split(',')[1]); };
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
+function genId(name){
+  var slug = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,36) || 'product';
+  return slug + '-' + Math.random().toString(36).slice(2,6);
+}
+function login(){
+  PW = document.getElementById('pw').value;
+  if (!PW){ msg('gateMsg','Enter the password.','err'); return; }
+  msg('gateMsg','Checking…','info');
+  api('list','GET').then(function(){
+    sessionStorage.setItem('dukkaan_admin_pw', PW);
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('panel').style.display = 'block';
+    loadList();
+  }).catch(function(e){ msg('gateMsg', e.message, 'err'); PW=''; });
+}
+document.getElementById('pw').addEventListener('keydown', function(e){ if(e.key==='Enter') login(); });
+if (PW){ document.getElementById('pw').value = PW; login(); }
+function setProgress(t){
+  var el = document.getElementById('progress');
+  el.style.display = t ? 'block' : 'none';
+  el.textContent = t || '';
+}
+function publish(){
+  var name = document.getElementById('fName').value.trim();
+  var price = document.getElementById('fPrice').value.trim();
+  var tagline = document.getElementById('fTagline').value.trim();
+  var desc = document.getElementById('fDesc').value.trim();
+  var zipF = document.getElementById('fZip').files[0];
+  var gifF = document.getElementById('fGif').files[0];
+  var id = editingId || genId(name || 'product');
+  msg('formMsg','','');
+  if (name.length < 2){ msg('formMsg','Product name is too short.','err'); return; }
+  if (!(parseFloat(price) > 0)){ msg('formMsg','Enter a valid price.','err'); return; }
+  if (desc.length < 5){ msg('formMsg','Add a short description.','err'); return; }
+  if (!editingId && !zipF){ msg('formMsg','Choose the product ZIP file.','err'); return; }
+  if (zipF && zipF.size > 3*1024*1024){ msg('formMsg','ZIP is over 3MB — compress it first.','err'); return; }
+  if (gifF && gifF.size > 3*1024*1024){ msg('formMsg','GIF is over 3MB — compress it first.','err'); return; }
+  var btn = document.getElementById('publishBtn');
+  btn.disabled = true;
+  var zipPath = editingZipPath, gifUrl = editingGifUrl;
+  function stepUploadZip(){
+    if (!zipF) return Promise.resolve();
+    setProgress('Uploading ZIP… (this can take ~30 seconds)');
+    return fileToB64(zipF).then(function(b64){
+      return api('upload','POST',{id:id, kind:'zip', base64:b64});
+    }).then(function(r){ zipPath = r.path; });
+  }
+  function stepUploadGif(){
+    if (!gifF) return Promise.resolve();
+    setProgress('Uploading GIF…');
+    return fileToB64(gifF).then(function(b64){
+      return api('upload','POST',{id:id, kind:'gif', base64:b64});
+    }).then(function(r){ gifUrl = r.url; });
+  }
+  stepUploadZip().then(stepUploadGif).then(function(){
+    setProgress('Publishing product…');
+    return api('save','POST',{id:id, name:name, price:price, tagline:tagline,
+      description:desc, zipPath:zipPath, gifUrl:gifUrl});
+  }).then(function(){
+    setProgress('');
+    msg('formMsg','🎉 Published! It will appear on the store in 1–2 minutes.','ok');
+    resetForm(); loadList();
+  }).catch(function(e){
+    setProgress('');
+    msg('formMsg', e.message, 'err');
+  }).then(function(){ btn.disabled = false; });
+}
+function resetForm(){
+  editingId = null; editingZipPath = null; editingGifUrl = null;
+  ['fName','fPrice','fTagline','fDesc'].forEach(function(i){ document.getElementById(i).value=''; });
+  document.getElementById('fZip').value=''; document.getElementById('fGif').value='';
+  document.getElementById('zipOk').style.display='none'; document.getElementById('gifOk').style.display='none';
+  document.getElementById('formTitle').textContent='Add New Product';
+  document.getElementById('cancelEdit').style.display='none';
+  document.getElementById('editHint').style.display='none';
+  document.getElementById('publishBtn').textContent='🚀 Publish Product';
+}
+document.getElementById('fZip').addEventListener('change', function(){
+  document.getElementById('zipOk').style.display = this.files[0] ? 'block' : 'none';
+});
+document.getElementById('fGif').addEventListener('change', function(){
+  document.getElementById('gifOk').style.display = this.files[0] ? 'block' : 'none';
+});
+function loadList(){
+  var box = document.getElementById('plist');
+  box.innerHTML = '<p class="sub">Loading…</p>';
+  api('list','GET').then(function(r){
+    var ps = r.products || [];
+    if (!ps.length){ box.innerHTML = '<p class="sub">No products yet — add your first one above!</p>'; return; }
+    box.innerHTML = '';
+    ps.slice().reverse().forEach(function(p){
+      var row = document.createElement('div');
+      row.className = 'prow';
+      var badge = p.active ? '<span class="badge on">LIVE</span>' : '<span class="badge off">HIDDEN</span>';
+      row.innerHTML =
+        (p.gifUrl ? '<img src="'+p.gifUrl+'" alt="">' : '<img alt="">') +
+        '<div class="pi"><b>'+escapeHtml(p.name)+'</b>'+badge+'<span>₹'+escapeHtml(p.price)+' • '+escapeHtml(p.id)+'</span></div>' +
+        '<div class="pa"></div>';
+      var pa = row.querySelector('.pa');
+      var tBtn = document.createElement('button');
+      tBtn.className = 'btn small ghost'; tBtn.textContent = p.active ? 'Hide' : 'Show';
+      tBtn.onclick = function(){ toggleProduct(p.id, !p.active); };
+      var eBtn = document.createElement('button');
+      eBtn.className = 'btn small ghost'; eBtn.textContent = 'Edit';
+      eBtn.onclick = function(){ editProduct(p); };
+      var dBtn = document.createElement('button');
+      dBtn.className = 'btn small danger'; dBtn.textContent = 'Delete';
+      dBtn.onclick = function(){ delProduct(p.id, p.name); };
+      pa.appendChild(tBtn); pa.appendChild(eBtn); pa.appendChild(dBtn);
+      box.appendChild(row);
+    });
+  }).catch(function(e){ box.innerHTML = '<p class="sub">Error: '+escapeHtml(e.message)+'</p>'; });
+}
+function escapeHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toggleProduct(id, active){
+  api('toggle','POST',{id:id, active:active}).then(loadList)
+    .catch(function(e){ alert(e.message); });
+}
+function delProduct(id, name){
+  if (!confirm('Delete "'+name+'" from the store? The files stay in the repo history.')) return;
+  api('del','POST',{id:id}).then(loadList).catch(function(e){ alert(e.message); });
+}
+function editProduct(p){
+  editingId = p.id; editingZipPath = p.zipPath; editingGifUrl = p.gifUrl;
+  document.getElementById('fName').value = p.name;
+  document.getElementById('fPrice').value = p.price;
+  document.getElementById('fTagline').value = p.tagline || '';
+  document.getElementById('fDesc').value = p.description || '';
+  document.getElementById('formTitle').textContent = 'Edit Product';
+  document.getElementById('cancelEdit').style.display = 'block';
+  document.getElementById('editHint').style.display = 'block';
+  document.getElementById('publishBtn').textContent = '💾 Save Changes';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
