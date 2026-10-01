@@ -1,4 +1,4 @@
-// Secure checkout entry: GET shows a retro buyer form, POST builds a PayU
+// Secure checkout entry: GET shows a buyer form, POST builds a PayU
 // hosted-checkout request (with our own surl/furl) and auto-submits it.
 // Usage: /api/pay?product=adjust  or  /api/pay?product=bin
 const crypto = require('crypto');
@@ -39,15 +39,15 @@ function formPage(product, errMsg, prev) {
     + '</style></head><body><div class="card">'
     + '<span class="kicker">★ NAKSH\'S RETRO TOOL DUKAAN ★</span>'
     + '<h1>' + esc(p.name) + '</h1>'
-    + '<p class="price">Sirf ₹' + esc(p.amount) + ' — ek baar ka payment</p>'
+    + '<p class="price">Only ₹' + esc(p.amount) + ' — one-time payment</p>'
     + err
     + '<form method="post" action="/api/pay?product=' + esc(product) + '">'
-    + '<label>Naam</label><input name="firstname" required maxlength="50" placeholder="Tumhara naam" value="' + esc(v.firstname) + '">'
+    + '<label>Name</label><input name="firstname" required maxlength="50" placeholder="Your name" value="' + esc(v.firstname) + '">'
     + '<label>Email</label><input name="email" type="email" required placeholder="you@example.com" value="' + esc(v.email) + '">'
-    + '<label>Phone (10 digit mobile)</label><input name="phone" required inputmode="numeric" maxlength="13" placeholder="98765 43210" value="' + esc(v.phone) + '">'
+    + '<label>Phone (10-digit mobile)</label><input name="phone" required inputmode="numeric" maxlength="13" placeholder="98765 43210" value="' + esc(v.phone) + '">'
     + '<button type="submit">Pay ₹' + esc(p.amount) + ' →</button>'
     + '</form>'
-    + '<p class="note">Payment PayU ke secure page par hogi. Pay karte hi tumhara download apne aap shuru ho jayega.</p>'
+    + '<p class="note">Payment happens on PayU\'s secure page. Your download will start automatically right after payment.</p>'
     + '</div></body></html>';
 }
 
@@ -66,11 +66,11 @@ module.exports = async (req, res) => {
     const q = req.query || {};
     const product = (q.product || '').toLowerCase();
     if (!PRODUCTS[product]) {
-      res.status(400).send('Product nahi mila');
+      res.status(400).send('Product not found');
       return;
     }
     if (!PAYU_KEY || !PAYU_SALT) {
-      res.status(500).send('Server setup adhura hai. Naksh se sampark karo.');
+      res.status(500).send('Server setup is incomplete. Please contact support.');
       return;
     }
 
@@ -94,17 +94,17 @@ module.exports = async (req, res) => {
 
     if (firstname.length < 2) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.status(200).send(formPage(product, 'Sahi naam likho (sirf akshar).', body));
+      res.status(200).send(formPage(product, 'Please enter a valid name (letters only).', body));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.status(200).send(formPage(product, 'Sahi email likho.', body));
+      res.status(200).send(formPage(product, 'Please enter a valid email address.', body));
       return;
     }
     if (!/^[6-9]\d{9}$/.test(phone)) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.status(200).send(formPage(product, 'Sahi 10-digit mobile number likho.', body));
+      res.status(200).send(formPage(product, 'Please enter a valid 10-digit mobile number.', body));
       return;
     }
 
@@ -127,12 +127,12 @@ module.exports = async (req, res) => {
     }).join('');
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.status(200).send('<!doctype html><html><head><meta charset="utf-8"><title>PayU par le ja rahe hain…</title>'
+    res.status(200).send('<!doctype html><html><head><meta charset="utf-8"><title>Taking you to PayU…</title>'
       + '<style>body{background:#1a1210;color:#ffd23f;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh}</style>'
-      + '</head><body><p>PayU ke secure payment page par le ja rahe hain…</p>'
+      + '</head><body><p>Taking you to PayU\'s secure payment page…</p>'
       + '<form id="payu" action="' + PAYU_URL + '" method="post">' + inputs + '</form>'
       + '<script>document.getElementById("payu").submit();</script></body></html>');
   } catch (e) {
-    res.status(500).send('Server error. Thodi der baad retry karo.');
+    res.status(500).send('Server error. Please try again in a bit.');
   }
 };
